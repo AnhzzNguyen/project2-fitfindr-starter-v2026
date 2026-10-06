@@ -42,59 +42,43 @@ Given a query that matches no listings, the agent stops before calling
 
 ---
 
-## 3. Something about state
+## 3. The selected item is passed intact through the session
 
-<!-- YOU WRITE THIS ONE.
+Given a matching query, the item selected by search_listings has identical id,
+price, title, and category when it reaches suggest_outfit — in 5 of 5 tries.
 
-     How would you know that the item your search found is the same item the
-     next tool received? Name something countable or observable.
-
-     This is the criterion people find hardest, because state failure doesn't
-     look like state failure — it looks like a tool problem. Something that
-     compares session["selected_item"] against what actually reached
-     suggest_outfit is the shape you're after. -->
-
-
-
-**Why this target:**
+**Why this target:** State corruption between tools would manifest as the wrong
+outfit suggestion or fit card. A direct field comparison catches if the item got
+lost, modified, or swapped mid-session before it reaches the wardrobe matcher.
 
 
 
 ---
 
-## 4. Something about the fit card
+## 4. The fit card is stable for the same item
 
-<!-- YOU WRITE THIS ONE.
+Given the same selected item and wardrobe, running generate_fit_card twice
+produces captions that share at least 2 sentences or 40% of content — in 5 of 5
+tries.
 
-     The fit card calls a model, so the same input can produce different words
-     each time. That's not a bug — it's the nature of the tool. So what would
-     make it acceptable?
-
-     Think about what you'd actually be unhappy to see. A caption that never
-     mentions the price? Two different items producing the same opening
-     sentence? A card longer than a caption anyone would post? Any of those can
-     be turned into a number. -->
-
-
-
-**Why this target:**
+**Why this target:** The model is non-deterministic, so exact matches are
+unrealistic. But if the same item produces wildly different cards each time, the
+user can't trust the outfit suggestion. Shared content (key details, styling
+advice) validates that the card is consistently relevant to the item, not random.
 
 
 
 ---
 
-## 5. Your choice
+## 5. Price ceilings are enforced in search results
 
-<!-- YOU WRITE THIS ONE TOO.
+Given a query like "vintage tee under $30", search_listings returns only items
+with price ≤ $30 — in 5 of 5 tries.
 
-     Pick something you actually care about getting right. Speed, the empty
-     wardrobe path, what happens when the model can't be reached, whether the
-     search respects a price ceiling — anything, as long as it names a number
-     or an observable outcome. -->
-
-
-
-**Why this target:**
+**Why this target:** A price ceiling is a hard constraint that a user explicitly
+states. Ignoring it breaks trust (they see expensive items they said no to) and
+wastes time. Unlike style matching, which is subjective, price is objective and
+must be enforced without exception.
 
 
 
