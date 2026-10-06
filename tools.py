@@ -155,8 +155,42 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
     Test it from a terminal before you move on:
         python -c "from tools import suggest_outfit; from utils.data_loader import get_example_wardrobe, load_listings; print(suggest_outfit(load_listings()[0], get_example_wardrobe()))"
     """
-    # TODO: replace this with your implementation
-    return ""
+    items = wardrobe.get("items", [])
+
+    if not items:
+        # Empty wardrobe: general styling advice
+        prompt = f"""Given this thrifted item, suggest how someone could style it.
+Provide one or two outfit ideas with general pieces they might look for (e.g., "pair with black jeans and a white tee" or "layer over a striped shirt").
+
+Item: {new_item['title']}
+Description: {new_item['description']}
+Category: {new_item['category']}
+Style tags: {', '.join(new_item.get('style_tags', []))}
+Colors: {', '.join(new_item.get('colors', []))}
+
+Keep the suggestions practical and specific to the item's vibe."""
+    else:
+        # Populated wardrobe: specific outfit combinations
+        wardrobe_text = "\n".join(
+            f"- {item['name']} ({item['category']}, {', '.join(item.get('colors', []))})"
+            for item in items
+        )
+
+        prompt = f"""Given this thrifted item and the user's existing wardrobe, suggest one or two outfits
+that combine the new item with pieces they already own. Name the specific wardrobe pieces.
+
+New Item: {new_item['title']}
+Description: {new_item['description']}
+Category: {new_item['category']}
+Style tags: {', '.join(new_item.get('style_tags', []))}
+Colors: {', '.join(new_item.get('colors', []))}
+
+User's Wardrobe:
+{wardrobe_text}
+
+Suggest practical combinations. If the new item doesn't work well with their wardrobe, say so and suggest what they'd need to make it work."""
+
+    return generate(prompt)
 
 
 # ── Tool 3: create_fit_card ───────────────────────────────────────────────────
@@ -195,5 +229,20 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
     Test it from a terminal before you move on:
         python -c "from tools import create_fit_card; from utils.data_loader import load_listings; print(create_fit_card('jeans and white sneakers', load_listings()[0]))"
     """
-    # TODO: replace this with your implementation
-    return ""
+    if not outfit or not outfit.strip():
+        return "No outfit suggestion available — couldn't match this item with the wardrobe."
+
+    prompt = f"""Write a short, engaging social media caption about this thrifted find.
+The caption should be 2-4 sentences, read like a real post (not a product description),
+mention the item title, its price, and the platform once each, and capture the vibe.
+
+Item: {new_item['title']}
+Price: ${new_item['price']}
+Platform: {new_item['platform']}
+Style: {', '.join(new_item.get('style_tags', []))}
+Description: {new_item['description']}
+Outfit suggestion: {outfit}
+
+Write the caption directly without any preamble."""
+
+    return generate(prompt)

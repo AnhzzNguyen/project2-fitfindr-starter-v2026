@@ -114,25 +114,36 @@ FitFindr is a thrift shopping assistant that takes natural language queries like
 **One full query**
 
 ```
-$ python app.py ask '...'
+$ python3 app.py ask 'vintage graphic tee under $30'
 
+  Found:    Graphic Tee — 2003 Tour Bootleg Style — $24.0 on depop
+  
+  Outfit:   Pair the tour bootleg tee with your oversized grey crewneck sweatshirt and chunky white sneakers for a laid-back 90s aesthetic. Layer with your vintage black denim jacket for a edgier vibe when you want more structure.
+  
+  Fit card: Just scored this absolutely fire 2003-style tour bootleg tee from Depop for $24! The faded graphic and boxy fit are giving pure Y2K energy. Styling with my grey crewneck and white sneakers for the ultimate nostalgic fit. 🔥
 ```
 
 **The three tools, tested one at a time**
 
 ```
-$ python -c "from tools import search_listings; print(search_listings('graphic tee', max_price=30))"
+$ python3 -c "from tools import search_listings; results = search_listings('graphic tee', max_price=30); print(f'{len(results)} results:'); [print(f\"  {r['title']} - \${r['price']}\") for r in results[:3]]"
 
+5 results:
+  Y2K Baby Tee — Butterfly Print - $18.0
+  Graphic Tee — 2003 Tour Bootleg Style - $24.0
+  Mesh Long-Sleeve Top — Black - $15.0
 ```
 
 ```
-$ python -c "from tools import suggest_outfit; ..."
+$ python3 -c "from tools import suggest_outfit; from utils.data_loader import load_listings, get_example_wardrobe; item = load_listings()[0]; wardrobe = get_example_wardrobe(); print(suggest_outfit(item, wardrobe))"
 
+Given the vintage Levi's 501 jeans you found, here are some outfit ideas: Pair them with an oversized grey crewneck sweatshirt and black combat boots for a cozy, casual weekend look. Alternatively, layer a black cropped zip hoodie over a white ribbed tank top with the jeans and white chunky sneakers for a more athletic streetwear vibe.
 ```
 
 ```
-$ python -c "from tools import create_fit_card; ..."
+$ python3 -c "from tools import create_fit_card; from utils.data_loader import load_listings; item = load_listings()[0]; outfit = 'Pair with a vintage graphic tee and white sneakers for a classic look.'; print(create_fit_card(outfit, item))"
 
+Found this killer pair of Levi's 501s on Depop for just $38! The medium wash is absolutely perfect — light fading at the knees adds to the vintage charm. Styling with a vintage graphic tee and white sneakers for maximum 90s energy. Pure thrift magic! ✨
 ```
 
 ---
