@@ -63,6 +63,7 @@ FitFindr is a thrift shopping assistant that takes natural language queries like
 - **Inputs:** `description` (str), `size` (str | None), `max_price` (float | None).
 - **Returns:** A list of listing dicts (up to `config.SEARCH_RESULT_LIMIT`), each containing id, title, description, category, style_tags, size, condition, price, colors, brand, platform. Ranked by keyword match score, best first.
 - **When it has nothing:** Returns an empty list `[]` when no listings match the criteria.
+- **Size matching rule:** Size matches are case-insensitive and must match size tokens exactly — split both the query and listing size by "/" and whitespace, then check if the query token appears in the listing tokens (e.g., "M" matches "S/M" and "M" but not "size M" as a substring of "us 9").
 
 ### `suggest_outfit`
 
@@ -93,13 +94,13 @@ FitFindr is a thrift shopping assistant that takes natural language queries like
      The grader checks your code against what you claim here, so the file and
      function have to be real. -->
 
-**Branch rule:**
+**Branch rule:** If search_listings returns an empty list, put a message in the session saying what criteria to adjust (e.g., "No items match your search — try a different style, size, or price range") and stop without calling suggest_outfit. Otherwise, take the first result from the list, put it in the session, and proceed to suggest_outfit.
 
 **Where it lives:** `agent.py::run_agent`
 
-**How the query is parsed:** <!-- regex, string splitting, or asking the model — say which -->
+**How the query is parsed:** The query is parsed using regex to extract a description (all text before price/size keywords), a size (matches "S", "M", "L", "XL", "W28", etc. case-insensitively), and a max_price (extracts number after "under" or "$" tokens).
 
-**What moves through the session:** <!-- which fields, in what order -->
+**What moves through the session:** query → parsed (description, size, max_price) → search_results (list of listings) → selected_item (first listing or None) → outfit_suggestion (string) → fit_card (string). If search_results is empty, execution stops and error is set.
 
 ---
 
