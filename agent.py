@@ -105,10 +105,73 @@ def run_agent(query: str, wardrobe: dict) -> dict:
       • A handler for ModelUnavailable, so a bad key produces a message rather
         than a stack trace. The import is already at the top of this file.
     """
-    session = new_session(query, wardrobe)
+    import re
 
-    # TODO: delete these two lines and build the loop.
-    session["error"] = "The planning loop isn't built yet — see the TODO in agent.py."
+    session = new_session(query, wardrobe)
+    count = 0
+
+    # 2. Check iterations
+    count += 1
+    trace.check_iterations(count)
+
+    # 3. Parse the query using regex
+    query_lower = query.lower()
+
+    # Extract max_price: look for "under $X" or "under X"
+    max_price = None
+    price_match = re.search(r"under\s*\$?(\d+(?:\.\d+)?)", query_lower)
+    if price_match:
+        max_price = float(price_match.group(1))
+
+    # Extract size: look for common size patterns (case-insensitive)
+    size = None
+    size_match = re.search(
+        r"(?:size|s)\s+([a-z0-9/]+)|([a-z]?x?[slm]|w\d+|us\s*\d+(?:\.\d+)?)",
+        query_lower,
+    )
+    if size_match:
+        size = (size_match.group(1) or size_match.group(2)).strip()
+
+    # Extract description: remove price/size keywords to get main keywords
+    description = re.sub(r"(?:under\s*\$?\d+(?:\.\d+)?|size\s+[a-z0-9/]+|,)", " ", query_lower)
+    description = " ".join(description.split())
+
+    session["parsed"] = {
+        "description": description,
+        "size": size,
+        "max_price": max_price,
+    }
+
+    # 4. Call search_listings
+    session["search_results"] = search_listings(
+        description=description,
+        size=size,
+        max_price=max_price,
+    )
+
+    # BRANCH: If nothing came back, stop and return error
+    if not session["search_results"]:
+        session["error"] = (
+            "No items match your search — try a different style, size, or price range."
+        )
+        return session
+
+    # 5. Choose the first result
+    session["selected_item"] = session["search_results"][0]
+
+    # 6. Call suggest_outfit
+    session["outfit_suggestion"] = suggest_outfit(
+        new_item=session["selected_item"],
+        wardrobe=wardrobe,
+    )
+
+    # 7. Call create_fit_card
+    session["fit_card"] = create_fit_card(
+        outfit=session["outfit_suggestion"],
+        new_item=session["selected_item"],
+    )
+
+    # 8. Return the session
     return session
 
 
