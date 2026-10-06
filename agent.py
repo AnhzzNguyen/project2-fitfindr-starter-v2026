@@ -159,16 +159,19 @@ def run_agent(query: str, wardrobe: dict) -> dict:
     # 5. Choose the first result
     session["selected_item"] = session["search_results"][0]
 
-    # 6. Call suggest_outfit
+    # 6. Call suggest_outfit with item read from session
+    item_for_outfit = session["selected_item"]
     session["outfit_suggestion"] = suggest_outfit(
-        new_item=session["selected_item"],
+        new_item=item_for_outfit,
         wardrobe=wardrobe,
     )
 
-    # 7. Call create_fit_card
+    # 7. Call create_fit_card with values read from session
+    outfit_for_card = session["outfit_suggestion"]
+    item_for_card = session["selected_item"]
     session["fit_card"] = create_fit_card(
-        outfit=session["outfit_suggestion"],
-        new_item=session["selected_item"],
+        outfit=outfit_for_card,
+        new_item=item_for_card,
     )
 
     # 8. Return the session
