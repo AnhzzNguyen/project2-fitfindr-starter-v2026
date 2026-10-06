@@ -78,8 +78,51 @@ def search_listings(
     Test it from a terminal before you move on:
         python -c "from tools import search_listings; print(search_listings('graphic tee', max_price=30))"
     """
-    # TODO: replace this with your implementation
-    return []
+    listings = load_listings()
+
+    # Filter by price if max_price is provided
+    if max_price is not None:
+        listings = [item for item in listings if item["price"] <= max_price]
+
+    # Filter by size if size is provided
+    if size is not None:
+        size_lower = size.lower()
+        size_tokens = set(size_lower.replace("/", " ").split())
+        filtered = []
+        for item in listings:
+            item_size_lower = item["size"].lower()
+            item_tokens = set(item_size_lower.replace("/", " ").split())
+            # Check if any of the query size tokens match any of the item's size tokens
+            if size_tokens & item_tokens:
+                filtered.append(item)
+        listings = filtered
+
+    # Score by keyword overlap with description
+    description_words = set(description.lower().split())
+    scored = []
+    for item in listings:
+        # Combine searchable fields: title, description, style_tags, colors, brand
+        searchable = (
+            item["title"].lower()
+            + " " + item["description"].lower()
+            + " " + " ".join(item.get("style_tags", []))
+            + " " + " ".join(item.get("colors", []))
+        )
+        if item.get("brand"):
+            searchable += " " + item["brand"].lower()
+
+        # Count keyword overlaps
+        searchable_words = set(searchable.split())
+        overlap = len(description_words & searchable_words)
+
+        if overlap > 0:
+            scored.append((overlap, item))
+
+    # Sort by score (highest first) and extract listing dicts
+    scored.sort(key=lambda x: x[0], reverse=True)
+    results = [item for _, item in scored[: config.SEARCH_RESULT_LIMIT]]
+
+    return results
 
 
 # ── Tool 2: suggest_outfit ────────────────────────────────────────────────────
