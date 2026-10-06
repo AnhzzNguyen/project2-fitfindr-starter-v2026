@@ -39,7 +39,7 @@
 
 ## What This Does
 
-<!-- Three or four sentences: what a user asks for, and what they get back. -->
+FitFindr is a thrift shopping assistant that takes natural language queries like "vintage graphic tee under $30, size M" and searches a dataset of secondhand listings for matches. For each match, it suggests how to style the item with pieces already in the user's wardrobe, then generates a short social media caption. If the search finds nothing, it tells the user what criteria to adjust and stops before wasting model calls.
 
 
 
@@ -59,24 +59,24 @@
 
 ### `search_listings`
 
-- **What it does:**
-- **Inputs:** <!-- name and type each: `max_price` (float), not "a price" -->
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Filters the listings dataset by description keywords, size, and price ceiling, then ranks results by keyword overlap with the description.
+- **Inputs:** `description` (str), `size` (str | None), `max_price` (float | None).
+- **Returns:** A list of listing dicts (up to `config.SEARCH_RESULT_LIMIT`), each containing id, title, description, category, style_tags, size, condition, price, colors, brand, platform. Ranked by keyword match score, best first.
+- **When it has nothing:** Returns an empty list `[]` when no listings match the criteria.
 
 ### `suggest_outfit`
 
-- **What it does:**
-- **Inputs:**
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Given a new item and the user's wardrobe, generates one or two outfit suggestions by calling the model.
+- **Inputs:** `new_item` (dict — a listing dict), `wardrobe` (dict with 'items' key containing a list of wardrobe item dicts).
+- **Returns:** A non-empty string with outfit suggestions. For an empty wardrobe, returns general styling advice for the item; for a populated wardrobe, returns specific outfit combinations naming pieces the user owns.
+- **When it has nothing:** Returns a non-empty string with general styling advice when `wardrobe['items']` is empty.
 
 ### `create_fit_card`
 
-- **What it does:**
-- **Inputs:**
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Generates a two-to-four sentence social media caption describing the outfit and the new item.
+- **Inputs:** `outfit` (str — the outfit suggestion from suggest_outfit), `new_item` (dict — a listing dict).
+- **Returns:** A two-to-four sentence caption that reads like a real post, mentions the item title, price, and platform once each, and describes the vibe.
+- **When it has nothing:** Returns a descriptive error message string if `outfit` is empty or whitespace-only.
 
 ---
 
