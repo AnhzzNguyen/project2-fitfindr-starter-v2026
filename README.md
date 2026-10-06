@@ -159,15 +159,15 @@ Found this killer pair of Levi's 501s on Depop for just $38! The medium wash is 
 
 **Moment 1**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I gave Claude my search_listings implementation that used substring matching for sizes (e.g., `if size.lower() in item["size"].lower()`), and asked if it would match "M" against "S/M" correctly.
+- *What came back:* Claude pointed out that substring matching would create false positives: "S" would match "US 9" (the substring "s" appears in "us"), and "L" would match "XL". Claude suggested splitting sizes by "/" and whitespace to get individual tokens, then checking if query tokens appear in item tokens.
+- *What I changed:* I replaced the substring match with token-based matching: `size_tokens = set(size_lower.replace("/", " ").split())` and `item_tokens = set(item_size_lower.replace("/", " ").split())`, then checked `if size_tokens & item_tokens`. This prevents "S" from matching "US 9" while correctly matching "M" against "S/M".
 
 **Moment 2**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I showed Claude my initial loop implementation where I passed search_listings results directly to suggest_outfit (e.g., `suggest_outfit(search_results[0], wardrobe)`) and asked if there was a better way to structure it.
+- *What came back:* Claude emphasized that values should flow through the session dict, not passed directly between tools. The reason: if you pass values straight, you can't inspect them for testing, and you can't verify that criterion 3 (state integrity) is met. Claude suggested reading from session: first write `session["selected_item"] = search_results[0]`, then later read `item_for_outfit = session["selected_item"]` before calling suggest_outfit.
+- *What I changed:* Restructured the loop to read every value from session before using it in the next tool call. For example: set `session["search_results"]` after search, then read it back with `item_for_outfit = session["selected_item"]` before calling suggest_outfit. This made all state visible and allowed me to verify the selected item was the same object that reached suggest_outfit (criterion 3 requirement).
 
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 
